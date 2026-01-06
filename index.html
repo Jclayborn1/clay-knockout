@@ -33,36 +33,28 @@ let player={x:canvas.width*0.25,y:canvas.height*0.7,hp:100,meter:0,hit:false,pun
 let enemy={x:canvas.width*0.75,y:canvas.height*0.7,hp:100,hit:false,punch:false};
 const stageLeft=50, stageRight=canvas.width-50;
 
-// ----- Crowd & Ring -----
+// ----- Background -----
 function drawBackground(){
-  // Crowd silhouettes
+  // Crowd
   for(let i=0;i<canvas.width;i+=30){
     ctx.fillStyle=`rgba(0,0,0,${0.1+Math.random()*0.2})`;
-    ctx.beginPath();
-    ctx.arc(i,canvas.height*0.6+Math.random()*20,10,0,Math.PI*2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(i,canvas.height*0.6+Math.random()*20,10,0,Math.PI*2); ctx.fill();
   }
 
-  // Clay ring floor
+  // Ring floor
   let ringGrad=ctx.createRadialGradient(canvas.width/2,canvas.height*0.7,50,canvas.width/2,canvas.height*0.7,canvas.width/2);
-  ringGrad.addColorStop(0,"#7a5d3b");
-  ringGrad.addColorStop(1,"#3e2f1c");
+  ringGrad.addColorStop(0,"#7a5d3b"); ringGrad.addColorStop(1,"#3e2f1c");
   ctx.fillStyle=ringGrad;
-  ctx.beginPath();
-  ctx.ellipse(canvas.width/2,canvas.height*0.7,canvas.width*0.4,100,0,0,Math.PI*2);
-  ctx.fill();
+  ctx.beginPath(); ctx.ellipse(canvas.width/2,canvas.height*0.7,canvas.width*0.4,100,0,0,Math.PI*2); ctx.fill();
 
-  // Ring ropes
-  ctx.strokeStyle="#d4af37";
-  ctx.lineWidth=4;
+  // Ropes
+  ctx.strokeStyle="#d4af37"; ctx.lineWidth=4;
   for(let j=0;j<3;j++){
-    ctx.beginPath();
-    ctx.ellipse(canvas.width/2,canvas.height*0.7-20+j*20,canvas.width*0.4,100,0,0,Math.PI*2);
-    ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(canvas.width/2,canvas.height*0.7-20+j*20,canvas.width*0.4,100,0,0,Math.PI*2); ctx.stroke();
   }
 }
 
-// ----- Clay Fighter Drawing -----
+// ----- Draw Fighters -----
 function drawFighter(f,char){
   ctx.save(); ctx.translate(f.x,f.y);
 
@@ -70,22 +62,90 @@ function drawFighter(f,char){
   let jig=[(Math.random()-0.5)*2,(Math.random()-0.5)*2]; ctx.translate(...jig);
   let scaleY=f.hit?1.2:1; ctx.scale(1,scaleY);
 
-  function clayCircle(x,y,r,base,highlight){
-    let grad=ctx.createRadialGradient(x,y-r/2,r/5,x,y,r*1.1);
-    grad.addColorStop(0,highlight); grad.addColorStop(1,base);
-    ctx.fillStyle=grad;
-  }
-
-  // Shadow under fighter
+  // Shadow
   let shadowGrad=ctx.createRadialGradient(0,35,5,0,35,20);
   shadowGrad.addColorStop(0,"rgba(0,0,0,0.4)");
   shadowGrad.addColorStop(1,"rgba(0,0,0,0)");
   ctx.fillStyle=shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(0,35,20,10,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0,35,20,10,0,0,Math.PI*2); ctx.fill();
+
+  function drawClayEllipse(x,y,rX,rY,base,highlight){
+    let grad=ctx.createRadialGradient(x,y-rY/2,rY/5,x,y,rY*1.1);
+    grad.addColorStop(0,highlight); grad.addColorStop(1,base);
+    ctx.fillStyle=grad;
+    ctx.beginPath(); ctx.ellipse(x,y,rX,rY,0,0,Math.PI*2); ctx.fill();
+  }
 
   if(char==="prince"){
-    clayCircle(-10,30,12,"#6a0dad","#9b4ef7"); ctx.beginPath(); ctx.ellipse(-10,30,12,12,0,0,Math.PI*2); ctx.fill();
-    clayCircle(10,30,12,"#6a0dad","#9b4ef7"); ctx.beginPath(); ctx.ellipse(10,30,12,12,0,0,Math.PI*2); ctx.fill();
-    clayCircle(0,10,25,"#55228b","#8a5de9"); ctx.beginPath(); ctx.ellipse(0,10,25,30,0,0,Math.PI*2); ctx.fill();
-    clayCircle(0,-20,18,"#f1c27d"
+    drawClayEllipse(-10,30,12,12,"#6a0dad","#9b4ef7"); // legs
+    drawClayEllipse(10,30,12,12,"#6a0dad","#9b4ef7");
+    drawClayEllipse(0,10,25,30,"#55228b","#8a5de9"); // torso
+    drawClayEllipse(0,-20,18,22,"#f1c27d","#ffeebb"); // head
+    drawClayEllipse(0,-40,10,10,"#4b0082","#7f00fc"); // hair
+  } else if(char==="tyson"){
+    drawClayEllipse(-10,30,12,12,"#000","#444"); // legs
+    drawClayEllipse(10,30,12,12,"#000","#444");
+    drawClayEllipse(0,10,28,32,"#f1c27d","#ffeebb"); // torso
+    drawClayEllipse(0,-20,18,22,"#f1c27d","#ffeebb"); // head
+    drawClayEllipse(20,10,10,10,"#ff5555","#ff8888"); // gloves
+    drawClayEllipse(-20,10,10,10,"#ff5555","#ff8888");
+  }
+
+  ctx.restore();
+}
+
+// ----- UI -----
+function drawUI(){
+  ctx.fillStyle="red"; ctx.fillRect(20,20,player.hp*2,10);
+  ctx.fillRect(canvas.width-220,20,enemy.hp*2,10);
+  ctx.fillStyle="yellow"; ctx.fillRect(20,40,player.meter*2,6);
+}
+
+// ----- Movement & Punch -----
+let moveLeft=false, moveRight=false;
+function punch(target,fighter,dmg){ target.hp-=dmg; fighter.punch=true; fighter.hit=true;
+  setTimeout(()=>{fighter.punch=false; fighter.hit=false;},150);
+}
+
+canvas.addEventListener("touchstart", e=>{
+  let x=e.touches[0].clientX;
+  if(x<window.innerWidth/3) moveLeft=true;
+  else if(x>window.innerWidth*2/3) moveRight=true;
+  else punch(enemy,player,10), player.meter=Math.min(player.meter+10,60);
+});
+canvas.addEventListener("touchend",()=>{ moveLeft=false; moveRight=false; });
+
+// ----- Enemy AI -----
+function enemyAI(){
+  if(enemy.x>player.x+50) enemy.x-=1.5;
+  if(enemy.x<player.x-50) enemy.x+=1.5;
+  if(Math.abs(enemy.x-player.x)<60 && Math.random()<0.02) punch(player,enemy,8);
+  enemy.x=Math.min(stageRight,Math.max(stageLeft,enemy.x));
+}
+
+// ----- Game Loop -----
+function gameLoop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawBackground();
+  if(moveLeft) player.x=Math.max(stageLeft,player.x-3);
+  if(moveRight) player.x=Math.min(stageRight,player.x+3);
+
+  drawFighter(player,"prince");
+  drawFighter(enemy,"tyson");
+  drawUI();
+  enemyAI();
+
+  if(player.hp<=0||enemy.hp<=0){
+    ctx.fillStyle="white"; ctx.font="32px Arial";
+    ctx.fillText(player.hp>0?"YOU WIN!":"YOU LOSE!",canvas.width/2-90,canvas.height/2);
+    return;
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+gameLoop();
+
+document.getElementById("special").onclick=()=>{ if(player.meter>=60){ punch(enemy,player,30); player.meter=0;} }
+</script>
+</body>
+</html>
