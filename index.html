@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-stroke: #ffffff}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-stroke: #ffffff; min-height: 14.0px}
+    span.s1 {font-kerning: none}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;html lang="en"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;meta charset="UTF-8"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;title&gt;Clay Knockout&lt;/title&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;meta name="theme-color" content="#2b2b2b"&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;link rel="manifest" href="manifest.json"&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;style&gt;</span></p>
+<p class="p1"><span class="s1">body {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>margin: 0;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>background: #2b2b2b;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>touch-action: manipulation;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>font-family: Arial, sans-serif;</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p1"><span class="s1">canvas {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>display: block;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>margin: auto;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>background: radial-gradient(#555, #222);</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p1"><span class="s1">#ui {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>position: absolute;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>top: 10px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>width: 100%;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>text-align: center;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>color: white;</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p1"><span class="s1">button {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>background: #c0392b;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>color: white;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>border: none;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>padding: 10px 16px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>border-radius: 20px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>font-size: 16px;</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p1"><span class="s1">&lt;/style&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div id="ui"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>&lt;button id="special"&gt;SPECIAL&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;canvas id="game" width="360" height="640"&gt;&lt;/canvas&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;script&gt;</span></p>
+<p class="p1"><span class="s1">if ("serviceWorker" in navigator) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>navigator.serviceWorker.register("sw.js");</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">const canvas = document.getElementById("game");</span></p>
+<p class="p1"><span class="s1">const ctx = canvas.getContext("2d");</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">let player = { x: 90, y: 420, hp: 100, meter: 0, hit: false };</span></p>
+<p class="p1"><span class="s1">let enemy<span class="Apple-converted-space">  </span>= { x: 250, y: 420, hp: 100, hit: false };</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">function drawFighter(f, color) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.save();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.translate(f.x, f.y);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>let squash = f.hit ? 1.2 : 1;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.scale(1, squash);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.fillStyle = color;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.beginPath();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.arc(0, 0, 40, 0, Math.PI * 2);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.fill();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.fillStyle = "#000";</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.beginPath();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.arc(-10, -5, 4, 0, Math.PI * 2);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.arc(10, -5, 4, 0, Math.PI * 2);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.fill();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.restore();</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">function drawUI() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.fillStyle = "red";</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.fillRect(20, 20, player.hp * 2, 10);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.fillRect(200, 20, enemy.hp * 2, 10);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.fillStyle = "yellow";</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.fillRect(20, 40, player.meter * 2, 6);</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">function punch(target, dmg) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>target.hp -= dmg;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>target.hit = true;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>setTimeout(() =&gt; target.hit = false, 120);</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">canvas.addEventListener("touchstart", e =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>let x = e.touches[0].clientX;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>if (x &lt; window.innerWidth / 2) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">   </span>punch(enemy, 5);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">   </span>player.meter += 5;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>} else {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">   </span>punch(enemy, 12);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">   </span>player.meter += 8;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>}</span></p>
+<p class="p1"><span class="s1">});</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">document.getElementById("special").onclick = () =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>if (player.meter &gt;= 50) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">   </span>punch(enemy, 30);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">   </span>player.meter = 0;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>}</span></p>
+<p class="p1"><span class="s1">};</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">function enemyAI() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>if (Math.random() &lt; 0.02) punch(player, 8);</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">function gameLoop() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>ctx.clearRect(0, 0, canvas.width, canvas.height);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>drawFighter(player, "#e67e22");</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>drawFighter(enemy, "#3498db");</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>drawUI();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>enemyAI();</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>if (player.hp &lt;= 0 || enemy.hp &lt;= 0) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">   </span>ctx.fillStyle = "white";</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">   </span>ctx.font = "32px Arial";</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">   </span>ctx.fillText(player.hp &gt; 0 ? "YOU WIN!" : "YOU LOSE!", 90, 300);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">   </span>return;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span>requestAnimationFrame(gameLoop);</span></p>
+<p class="p1"><span class="s1">}</span></p>
+<p class="p1"><span class="s1">gameLoop();</span></p>
+<p class="p1"><span class="s1">&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+</body>
+</html>
