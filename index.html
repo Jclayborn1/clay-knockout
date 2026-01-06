@@ -58,8 +58,12 @@ window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
 // ----- Game State -----
-let player = { x: canvas.width*0.25, y: canvas.height*0.65, hp: 100, meter: 0, hit: false };
-let enemy  = { x: canvas.width*0.75, y: canvas.height*0.65, hp: 100, hit: false };
+let player = { x: canvas.width*0.25, y: canvas.height*0.65, hp: 100, meter: 0, hit: false, punch: false };
+let enemy  = { x: canvas.width*0.75, y: canvas.height*0.65, hp: 100, hit: false, punch: false };
+
+// Stage boundaries
+const stageMin = 50;
+const stageMax = canvas.width - 50;
 
 // ----- Draw Clay Fighters with 3D feel -----
 function drawFighter(f, character) {
@@ -71,7 +75,6 @@ function drawFighter(f, character) {
   let jitterY = (Math.random()-0.5)*2;
   ctx.translate(jitterX, jitterY);
 
-  // Squash on hit
   let squash = f.hit ? 1.2 : 1;
   ctx.scale(1, squash);
 
@@ -100,7 +103,8 @@ function drawFighter(f, character) {
 
     // Arms
     ctx.fillStyle = "#6a0dad";
-    ctx.fillRect(-30,-10,10,30);
+    // Punch animation
+    if(f.punch) ctx.fillRect(-30,-10,20,10); else ctx.fillRect(-30,-10,10,30);
     ctx.fillRect(20,-10,10,30);
 
     // Head
@@ -149,24 +153,24 @@ function drawFighter(f, character) {
 
     // Arms
     ctx.fillStyle = "#f1c27d";
+    if(f.punch) ctx.fillRect(20,-10,20,10); else ctx.fillRect(20,-10,10,30);
     ctx.fillRect(-30,-10,10,30);
-    ctx.fillRect(20,-10,10,30);
 
-    // Boxing gloves
-    let gloveGrad = ctx.createRadialGradient(-25,10,3,-25,10,7);
-    gloveGrad.addColorStop(0,"#ff5555");
-    gloveGrad.addColorStop(1,"#aa0000");
-    ctx.fillStyle = gloveGrad;
-    ctx.beginPath();
-    ctx.arc(-25,10,7,0,Math.PI*2);
-    ctx.fill();
-
-    gloveGrad = ctx.createRadialGradient(25,10,3,25,10,7);
+    // Gloves
+    let gloveGrad = ctx.createRadialGradient(25,10,3,25,10,7);
     gloveGrad.addColorStop(0,"#ff5555");
     gloveGrad.addColorStop(1,"#aa0000");
     ctx.fillStyle = gloveGrad;
     ctx.beginPath();
     ctx.arc(25,10,7,0,Math.PI*2);
+    ctx.fill();
+
+    gloveGrad = ctx.createRadialGradient(-25,10,3,-25,10,7);
+    gloveGrad.addColorStop(0,"#ff5555");
+    gloveGrad.addColorStop(1,"#aa0000");
+    ctx.fillStyle = gloveGrad;
+    ctx.beginPath();
+    ctx.arc(-25,10,7,0,Math.PI*2);
     ctx.fill();
 
     // Head
@@ -214,39 +218,46 @@ function drawUI() {
   ctx.fillRect(20,40,player.meter*2,6);
 }
 
-// ----- Punch -----
-function punch(target,dmg){
+// ----- Movement and Punch -----
+let moveLeft=false, moveRight=false;
+function punch(target,dmg,fighter){
   target.hp-=dmg;
-  target.hit=true;
-  setTimeout(()=>target.hit=false,120);
+  fighter.punch=true;
+  fighter.hit=true;
+  setTimeout(()=>{
+    fighter.punch=false;
+    fighter.hit=false;
+  },150);
 }
 
-// ----- Controls -----
 canvas.addEventListener("touchstart",e=>{
   let x=e.touches[0].clientX;
-  if(x<window.innerWidth/2){
-    punch(enemy,5);
-    player.meter=Math.min(player.meter+5,50);
-  } else {
-    punch(enemy,12);
-    player.meter=Math.min(player.meter+8,50);
-  }
+  if(x<window.innerWidth/3) moveLeft=true;
+  else if(x>window.innerWidth*2/3) moveRight=true;
+  else { punch(enemy,10,player); player.meter=Math.min(player.meter+10,50);}
 });
-document.getElementById("special").onclick=()=>{
-  if(player.meter>=50){
-    punch(enemy,30);
-    player.meter=0;
-  }
-};
+canvas.addEventListener("touchend",()=>{ moveLeft=false; moveRight=false; });
 
 // ----- Enemy AI -----
 function enemyAI(){
-  if(Math.random()<0.02) punch(player,8);
+  // Move toward player
+  if(enemy.x > player.x+50) enemy.x-=1.5;
+  if(enemy.x < player.x-50) enemy.x+=1.5;
+
+  // Punch randomly if close
+  if(Math.abs(enemy.x-player.x)<60 && Math.random()<0.02) punch(player,8,enemy);
+
+  // Keep within stage
+  enemy.x=Math.min(stageMax, Math.max(stageMin, enemy.x));
 }
 
 // ----- Game Loop -----
 function gameLoop(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Player movement
+  if(moveLeft) player.x=Math.max(stageMin,player.x-3);
+  if(moveRight) player.x=Math.min(stageMax,player.x+3);
 
   drawFighter(player,"prince");
   drawFighter(enemy,"tyson");
@@ -265,6 +276,11 @@ function gameLoop(){
 }
 
 gameLoop();
+
+// Special button
+document.getElementById("special").onclick=()=>{
+  if(player.meter>=50){ punch(enemy,30,player); player.meter=0;}
+}
 </script>
 </body>
 </html>
