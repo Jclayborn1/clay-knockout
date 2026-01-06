@@ -61,7 +61,7 @@ resizeCanvas();
 let player = { x: canvas.width*0.25, y: canvas.height*0.65, hp: 100, meter: 0, hit: false };
 let enemy  = { x: canvas.width*0.75, y: canvas.height*0.65, hp: 100, hit: false };
 
-// ----- Draw Clay Fighters -----
+// ----- Draw Clay Fighters with 3D feel -----
 function drawFighter(f, character) {
   ctx.save();
   ctx.translate(f.x, f.y);
@@ -75,19 +75,22 @@ function drawFighter(f, character) {
   let squash = f.hit ? 1.2 : 1;
   ctx.scale(1, squash);
 
-  // Draw character
   if(character === "prince") {
-    // ---- Prince Body ----
     // Legs
-    ctx.fillStyle = "#6a0dad"; // purple pants
-    ctx.fillRect(-15, 20, 10, 20);
-    ctx.fillRect(5, 20, 10, 20);
+    ctx.fillStyle = "#6a0dad";
+    ctx.shadowColor = "#400070";
+    ctx.shadowBlur = 8;
+    ctx.fillRect(-15,20,10,20);
+    ctx.fillRect(5,20,10,20);
 
-    // Torso / jacket
-    ctx.fillStyle = "#8a2be2"; 
-    ctx.fillRect(-20, -20, 40, 40);
+    // Torso
+    let grad = ctx.createLinearGradient(-20,-20,20,20);
+    grad.addColorStop(0,"#8a2be2");
+    grad.addColorStop(1,"#5a0070");
+    ctx.fillStyle = grad;
+    ctx.fillRect(-20,-20,40,40);
 
-    // Collar / ruffles
+    // Collar
     ctx.fillStyle = "#fff";
     ctx.beginPath();
     ctx.moveTo(-20,-20);
@@ -101,7 +104,10 @@ function drawFighter(f, character) {
     ctx.fillRect(20,-10,10,30);
 
     // Head
-    ctx.fillStyle = "#f1c27d"; // skin tone
+    let headGrad = ctx.createRadialGradient(0,-40,5,0,-40,15);
+    headGrad.addColorStop(0,"#f1c27d");
+    headGrad.addColorStop(1,"#d1a377");
+    ctx.fillStyle = headGrad;
     ctx.beginPath();
     ctx.arc(0,-40,15,0,Math.PI*2);
     ctx.fill();
@@ -127,14 +133,18 @@ function drawFighter(f, character) {
     ctx.stroke();
 
   } else if(character === "tyson") {
-    // ---- Mike Tyson Body ----
     // Legs
-    ctx.fillStyle = "#000"; // black trunks
+    ctx.fillStyle = "#000";
+    ctx.shadowColor = "#333";
+    ctx.shadowBlur = 8;
     ctx.fillRect(-15,20,10,20);
     ctx.fillRect(5,20,10,20);
 
     // Torso
-    ctx.fillStyle = "#f1c27d"; // skin tone
+    let torsoGrad = ctx.createLinearGradient(-20,-20,20,20);
+    torsoGrad.addColorStop(0,"#f1c27d");
+    torsoGrad.addColorStop(1,"#cfa27d");
+    ctx.fillStyle = torsoGrad;
     ctx.fillRect(-20,-20,40,40);
 
     // Arms
@@ -143,16 +153,27 @@ function drawFighter(f, character) {
     ctx.fillRect(20,-10,10,30);
 
     // Boxing gloves
-    ctx.fillStyle = "#ff0000";
+    let gloveGrad = ctx.createRadialGradient(-25,10,3,-25,10,7);
+    gloveGrad.addColorStop(0,"#ff5555");
+    gloveGrad.addColorStop(1,"#aa0000");
+    ctx.fillStyle = gloveGrad;
     ctx.beginPath();
     ctx.arc(-25,10,7,0,Math.PI*2);
     ctx.fill();
+
+    gloveGrad = ctx.createRadialGradient(25,10,3,25,10,7);
+    gloveGrad.addColorStop(0,"#ff5555");
+    gloveGrad.addColorStop(1,"#aa0000");
+    ctx.fillStyle = gloveGrad;
     ctx.beginPath();
     ctx.arc(25,10,7,0,Math.PI*2);
     ctx.fill();
 
     // Head
-    ctx.fillStyle = "#f1c27d";
+    let headGrad = ctx.createRadialGradient(0,-40,5,0,-40,15);
+    headGrad.addColorStop(0,"#f1c27d");
+    headGrad.addColorStop(1,"#d1a377");
+    ctx.fillStyle = headGrad;
     ctx.beginPath();
     ctx.arc(0,-40,15,0,Math.PI*2);
     ctx.fill();
@@ -186,61 +207,60 @@ function drawFighter(f, character) {
 // ----- Draw UI -----
 function drawUI() {
   ctx.fillStyle = "red";
-  ctx.fillRect(20, 20, player.hp*2, 10);
-  ctx.fillRect(canvas.width-220, 20, enemy.hp*2, 10);
-  
+  ctx.fillRect(20,20,player.hp*2,10);
+  ctx.fillRect(canvas.width-220,20,enemy.hp*2,10);
+
   ctx.fillStyle = "yellow";
-  ctx.fillRect(20, 40, player.meter*2, 6);
+  ctx.fillRect(20,40,player.meter*2,6);
 }
 
 // ----- Punch -----
-function punch(target, dmg) {
-  target.hp -= dmg;
-  target.hit = true;
-  setTimeout(() => target.hit = false, 120);
+function punch(target,dmg){
+  target.hp-=dmg;
+  target.hit=true;
+  setTimeout(()=>target.hit=false,120);
 }
 
 // ----- Controls -----
-canvas.addEventListener("touchstart", e => {
-  let x = e.touches[0].clientX;
-  if (x < window.innerWidth/2) {
-    punch(enemy, 5);
-    player.meter = Math.min(player.meter+5,50);
+canvas.addEventListener("touchstart",e=>{
+  let x=e.touches[0].clientX;
+  if(x<window.innerWidth/2){
+    punch(enemy,5);
+    player.meter=Math.min(player.meter+5,50);
   } else {
-    punch(enemy, 12);
-    player.meter = Math.min(player.meter+8,50);
+    punch(enemy,12);
+    player.meter=Math.min(player.meter+8,50);
   }
 });
-
-document.getElementById("special").onclick = () => {
-  if(player.meter >= 50){
-    punch(enemy, 30);
-    player.meter = 0;
+document.getElementById("special").onclick=()=>{
+  if(player.meter>=50){
+    punch(enemy,30);
+    player.meter=0;
   }
 };
 
 // ----- Enemy AI -----
-function enemyAI() {
-  if(Math.random() < 0.02) punch(player, 8);
+function enemyAI(){
+  if(Math.random()<0.02) punch(player,8);
 }
 
 // ----- Game Loop -----
-function gameLoop() {
+function gameLoop(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  
-  drawFighter(player, "prince");
-  drawFighter(enemy, "tyson");
+
+  drawFighter(player,"prince");
+  drawFighter(enemy,"tyson");
   drawUI();
-  
+
   enemyAI();
-  
-  if(player.hp <=0 || enemy.hp <=0){
-    ctx.fillStyle = "white";
-    ctx.font = "32px Arial";
+
+  if(player.hp<=0 || enemy.hp<=0){
+    ctx.fillStyle="white";
+    ctx.font="32px Arial";
     ctx.fillText(player.hp>0 ? "YOU WIN!" : "YOU LOSE!", canvas.width/2-90, canvas.height/2);
     return;
   }
-  
+
   requestAnimationFrame(gameLoop);
 }
 
