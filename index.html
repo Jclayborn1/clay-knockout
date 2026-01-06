@@ -7,280 +7,85 @@
 <meta name="theme-color" content="#2b2b2b">
 <link rel="manifest" href="manifest.json">
 <style>
-body {
-  margin: 0;
-  background: #2b2b2b;
-  touch-action: manipulation;
-  font-family: Arial, sans-serif;
-}
-canvas {
-  display: block;
-  margin: auto;
-  background: radial-gradient(#555, #222);
-}
-#ui {
-  position: absolute;
-  top: 10px;
-  width: 100%;
-  text-align: center;
-  color: white;
-}
-button {
-  background: #c0392b;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 20px;
-  font-size: 16px;
-}
+body { margin:0; background:#2b2b2b; touch-action:manipulation; font-family:Arial,sans-serif; }
+canvas { display:block; margin:auto; background:radial-gradient(#444,#111); }
+#ui { position:absolute; top:10px; width:100%; text-align:center; color:white; }
+button { background:#c0392b; color:white; border:none; padding:10px 16px; border-radius:20px; font-size:16px; }
 </style>
 </head>
 <body>
-<div id="ui">
-  <button id="special">SPECIAL</button>
-</div>
+<div id="ui"><button id="special">SPECIAL</button></div>
 <canvas id="game"></canvas>
 
 <script>
-// ----- PWA Service Worker -----
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
-}
+// PWA support
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
 
-// ----- Canvas Setup -----
+// Canvas setup
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
+function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-// ----- Game State -----
-let player = { x: canvas.width*0.25, y: canvas.height*0.65, hp: 100, meter: 0, hit: false, punch: false };
-let enemy  = { x: canvas.width*0.75, y: canvas.height*0.65, hp: 100, hit: false, punch: false };
+// Game state
+let player={x:canvas.width*0.25,y:canvas.height*0.7,hp:100,meter:0,hit:false,punch:false};
+let enemy={x:canvas.width*0.75,y:canvas.height*0.7,hp:100,hit:false,punch:false};
+const stageLeft=50, stageRight=canvas.width-50;
 
-// Stage boundaries
-const stageMin = 50;
-const stageMax = canvas.width - 50;
-
-// ----- Draw Clay Fighters with 3D feel -----
-function drawFighter(f, character) {
-  ctx.save();
-  ctx.translate(f.x, f.y);
-
-  // Stop-motion jitter
-  let jitterX = (Math.random()-0.5)*2;
-  let jitterY = (Math.random()-0.5)*2;
-  ctx.translate(jitterX, jitterY);
-
-  let squash = f.hit ? 1.2 : 1;
-  ctx.scale(1, squash);
-
-  if(character === "prince") {
-    // Legs
-    ctx.fillStyle = "#6a0dad";
-    ctx.shadowColor = "#400070";
-    ctx.shadowBlur = 8;
-    ctx.fillRect(-15,20,10,20);
-    ctx.fillRect(5,20,10,20);
-
-    // Torso
-    let grad = ctx.createLinearGradient(-20,-20,20,20);
-    grad.addColorStop(0,"#8a2be2");
-    grad.addColorStop(1,"#5a0070");
-    ctx.fillStyle = grad;
-    ctx.fillRect(-20,-20,40,40);
-
-    // Collar
-    ctx.fillStyle = "#fff";
+// ----- Crowd & Ring -----
+function drawBackground(){
+  // Crowd silhouettes
+  for(let i=0;i<canvas.width;i+=30){
+    ctx.fillStyle=`rgba(0,0,0,${0.1+Math.random()*0.2})`;
     ctx.beginPath();
-    ctx.moveTo(-20,-20);
-    ctx.lineTo(0,-35);
-    ctx.lineTo(20,-20);
+    ctx.arc(i,canvas.height*0.6+Math.random()*20,10,0,Math.PI*2);
     ctx.fill();
-
-    // Arms
-    ctx.fillStyle = "#6a0dad";
-    // Punch animation
-    if(f.punch) ctx.fillRect(-30,-10,20,10); else ctx.fillRect(-30,-10,10,30);
-    ctx.fillRect(20,-10,10,30);
-
-    // Head
-    let headGrad = ctx.createRadialGradient(0,-40,5,0,-40,15);
-    headGrad.addColorStop(0,"#f1c27d");
-    headGrad.addColorStop(1,"#d1a377");
-    ctx.fillStyle = headGrad;
-    ctx.beginPath();
-    ctx.arc(0,-40,15,0,Math.PI*2);
-    ctx.fill();
-
-    // Hair
-    ctx.fillStyle = "#4b0082";
-    ctx.beginPath();
-    ctx.arc(0,-50,10,0,Math.PI*2);
-    ctx.fill();
-
-    // Eyes
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(-5,-42,2,0,Math.PI*2);
-    ctx.arc(5,-42,2,0,Math.PI*2);
-    ctx.fill();
-
-    // Mouth
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(0,-35,4,0,Math.PI);
-    ctx.stroke();
-
-  } else if(character === "tyson") {
-    // Legs
-    ctx.fillStyle = "#000";
-    ctx.shadowColor = "#333";
-    ctx.shadowBlur = 8;
-    ctx.fillRect(-15,20,10,20);
-    ctx.fillRect(5,20,10,20);
-
-    // Torso
-    let torsoGrad = ctx.createLinearGradient(-20,-20,20,20);
-    torsoGrad.addColorStop(0,"#f1c27d");
-    torsoGrad.addColorStop(1,"#cfa27d");
-    ctx.fillStyle = torsoGrad;
-    ctx.fillRect(-20,-20,40,40);
-
-    // Arms
-    ctx.fillStyle = "#f1c27d";
-    if(f.punch) ctx.fillRect(20,-10,20,10); else ctx.fillRect(20,-10,10,30);
-    ctx.fillRect(-30,-10,10,30);
-
-    // Gloves
-    let gloveGrad = ctx.createRadialGradient(25,10,3,25,10,7);
-    gloveGrad.addColorStop(0,"#ff5555");
-    gloveGrad.addColorStop(1,"#aa0000");
-    ctx.fillStyle = gloveGrad;
-    ctx.beginPath();
-    ctx.arc(25,10,7,0,Math.PI*2);
-    ctx.fill();
-
-    gloveGrad = ctx.createRadialGradient(-25,10,3,-25,10,7);
-    gloveGrad.addColorStop(0,"#ff5555");
-    gloveGrad.addColorStop(1,"#aa0000");
-    ctx.fillStyle = gloveGrad;
-    ctx.beginPath();
-    ctx.arc(-25,10,7,0,Math.PI*2);
-    ctx.fill();
-
-    // Head
-    let headGrad = ctx.createRadialGradient(0,-40,5,0,-40,15);
-    headGrad.addColorStop(0,"#f1c27d");
-    headGrad.addColorStop(1,"#d1a377");
-    ctx.fillStyle = headGrad;
-    ctx.beginPath();
-    ctx.arc(0,-40,15,0,Math.PI*2);
-    ctx.fill();
-
-    // Eyes
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(-5,-42,2,0,Math.PI*2);
-    ctx.arc(5,-42,2,0,Math.PI*2);
-    ctx.fill();
-
-    // Mouth
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(0,-35,4,0,Math.PI);
-    ctx.stroke();
-
-    // Facial tattoo
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(5,-48);
-    ctx.quadraticCurveTo(10,-45,5,-40);
-    ctx.stroke();
   }
 
-  ctx.restore();
+  // Clay ring floor
+  let ringGrad=ctx.createRadialGradient(canvas.width/2,canvas.height*0.7,50,canvas.width/2,canvas.height*0.7,canvas.width/2);
+  ringGrad.addColorStop(0,"#7a5d3b");
+  ringGrad.addColorStop(1,"#3e2f1c");
+  ctx.fillStyle=ringGrad;
+  ctx.beginPath();
+  ctx.ellipse(canvas.width/2,canvas.height*0.7,canvas.width*0.4,100,0,0,Math.PI*2);
+  ctx.fill();
+
+  // Ring ropes
+  ctx.strokeStyle="#d4af37";
+  ctx.lineWidth=4;
+  for(let j=0;j<3;j++){
+    ctx.beginPath();
+    ctx.ellipse(canvas.width/2,canvas.height*0.7-20+j*20,canvas.width*0.4,100,0,0,Math.PI*2);
+    ctx.stroke();
+  }
 }
 
-// ----- Draw UI -----
-function drawUI() {
-  ctx.fillStyle = "red";
-  ctx.fillRect(20,20,player.hp*2,10);
-  ctx.fillRect(canvas.width-220,20,enemy.hp*2,10);
+// ----- Clay Fighter Drawing -----
+function drawFighter(f,char){
+  ctx.save(); ctx.translate(f.x,f.y);
 
-  ctx.fillStyle = "yellow";
-  ctx.fillRect(20,40,player.meter*2,6);
-}
+  // stop-motion jiggle
+  let jig=[(Math.random()-0.5)*2,(Math.random()-0.5)*2]; ctx.translate(...jig);
+  let scaleY=f.hit?1.2:1; ctx.scale(1,scaleY);
 
-// ----- Movement and Punch -----
-let moveLeft=false, moveRight=false;
-function punch(target,dmg,fighter){
-  target.hp-=dmg;
-  fighter.punch=true;
-  fighter.hit=true;
-  setTimeout(()=>{
-    fighter.punch=false;
-    fighter.hit=false;
-  },150);
-}
-
-canvas.addEventListener("touchstart",e=>{
-  let x=e.touches[0].clientX;
-  if(x<window.innerWidth/3) moveLeft=true;
-  else if(x>window.innerWidth*2/3) moveRight=true;
-  else { punch(enemy,10,player); player.meter=Math.min(player.meter+10,50);}
-});
-canvas.addEventListener("touchend",()=>{ moveLeft=false; moveRight=false; });
-
-// ----- Enemy AI -----
-function enemyAI(){
-  // Move toward player
-  if(enemy.x > player.x+50) enemy.x-=1.5;
-  if(enemy.x < player.x-50) enemy.x+=1.5;
-
-  // Punch randomly if close
-  if(Math.abs(enemy.x-player.x)<60 && Math.random()<0.02) punch(player,8,enemy);
-
-  // Keep within stage
-  enemy.x=Math.min(stageMax, Math.max(stageMin, enemy.x));
-}
-
-// ----- Game Loop -----
-function gameLoop(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  // Player movement
-  if(moveLeft) player.x=Math.max(stageMin,player.x-3);
-  if(moveRight) player.x=Math.min(stageMax,player.x+3);
-
-  drawFighter(player,"prince");
-  drawFighter(enemy,"tyson");
-  drawUI();
-
-  enemyAI();
-
-  if(player.hp<=0 || enemy.hp<=0){
-    ctx.fillStyle="white";
-    ctx.font="32px Arial";
-    ctx.fillText(player.hp>0 ? "YOU WIN!" : "YOU LOSE!", canvas.width/2-90, canvas.height/2);
-    return;
+  function clayCircle(x,y,r,base,highlight){
+    let grad=ctx.createRadialGradient(x,y-r/2,r/5,x,y,r*1.1);
+    grad.addColorStop(0,highlight); grad.addColorStop(1,base);
+    ctx.fillStyle=grad;
   }
 
-  requestAnimationFrame(gameLoop);
-}
+  // Shadow under fighter
+  let shadowGrad=ctx.createRadialGradient(0,35,5,0,35,20);
+  shadowGrad.addColorStop(0,"rgba(0,0,0,0.4)");
+  shadowGrad.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=shadowGrad;
+  ctx.beginPath();
+  ctx.ellipse(0,35,20,10,0,0,Math.PI*2); ctx.fill();
 
-gameLoop();
-
-// Special button
-document.getElementById("special").onclick=()=>{
-  if(player.meter>=50){ punch(enemy,30,player); player.meter=0;}
-}
-</script>
-</body>
-</html>
+  if(char==="prince"){
+    clayCircle(-10,30,12,"#6a0dad","#9b4ef7"); ctx.beginPath(); ctx.ellipse(-10,30,12,12,0,0,Math.PI*2); ctx.fill();
+    clayCircle(10,30,12,"#6a0dad","#9b4ef7"); ctx.beginPath(); ctx.ellipse(10,30,12,12,0,0,Math.PI*2); ctx.fill();
+    clayCircle(0,10,25,"#55228b","#8a5de9"); ctx.beginPath(); ctx.ellipse(0,10,25,30,0,0,Math.PI*2); ctx.fill();
+    clayCircle(0,-20,18,"#f1c27d"
