@@ -19,4 +19,232 @@ canvas {
   background: radial-gradient(#555, #222);
 }
 #ui {
-  position: absol
+  position: absolute;
+  top: 10px;
+  width: 100%;
+  text-align: center;
+  color: white;
+}
+button {
+  background: #c0392b;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-size: 16px;
+}
+</style>
+</head>
+<body>
+<div id="ui">
+  <button id="special">SPECIAL</button>
+</div>
+<canvas id="game"></canvas>
+
+<script>
+// ----- PWA Service Worker -----
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+
+// ----- Canvas Setup -----
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// ----- Game State -----
+let player = { x: canvas.width*0.25, y: canvas.height*0.65, hp: 100, meter: 0, hit: false };
+let enemy  = { x: canvas.width*0.75, y: canvas.height*0.65, hp: 100, hit: false };
+
+// ----- Draw Clay Fighters -----
+function drawFighter(f, character) {
+  ctx.save();
+  ctx.translate(f.x, f.y);
+
+  // Stop-motion jitter
+  let jitterX = (Math.random()-0.5)*2;
+  let jitterY = (Math.random()-0.5)*2;
+  ctx.translate(jitterX, jitterY);
+
+  // Squash on hit
+  let squash = f.hit ? 1.2 : 1;
+  ctx.scale(1, squash);
+
+  // Draw character
+  if(character === "prince") {
+    // ---- Prince Body ----
+    // Legs
+    ctx.fillStyle = "#6a0dad"; // purple pants
+    ctx.fillRect(-15, 20, 10, 20);
+    ctx.fillRect(5, 20, 10, 20);
+
+    // Torso / jacket
+    ctx.fillStyle = "#8a2be2"; 
+    ctx.fillRect(-20, -20, 40, 40);
+
+    // Collar / ruffles
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.moveTo(-20,-20);
+    ctx.lineTo(0,-35);
+    ctx.lineTo(20,-20);
+    ctx.fill();
+
+    // Arms
+    ctx.fillStyle = "#6a0dad";
+    ctx.fillRect(-30,-10,10,30);
+    ctx.fillRect(20,-10,10,30);
+
+    // Head
+    ctx.fillStyle = "#f1c27d"; // skin tone
+    ctx.beginPath();
+    ctx.arc(0,-40,15,0,Math.PI*2);
+    ctx.fill();
+
+    // Hair
+    ctx.fillStyle = "#4b0082";
+    ctx.beginPath();
+    ctx.arc(0,-50,10,0,Math.PI*2);
+    ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(-5,-42,2,0,Math.PI*2);
+    ctx.arc(5,-42,2,0,Math.PI*2);
+    ctx.fill();
+
+    // Mouth
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0,-35,4,0,Math.PI);
+    ctx.stroke();
+
+  } else if(character === "tyson") {
+    // ---- Mike Tyson Body ----
+    // Legs
+    ctx.fillStyle = "#000"; // black trunks
+    ctx.fillRect(-15,20,10,20);
+    ctx.fillRect(5,20,10,20);
+
+    // Torso
+    ctx.fillStyle = "#f1c27d"; // skin tone
+    ctx.fillRect(-20,-20,40,40);
+
+    // Arms
+    ctx.fillStyle = "#f1c27d";
+    ctx.fillRect(-30,-10,10,30);
+    ctx.fillRect(20,-10,10,30);
+
+    // Boxing gloves
+    ctx.fillStyle = "#ff0000";
+    ctx.beginPath();
+    ctx.arc(-25,10,7,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(25,10,7,0,Math.PI*2);
+    ctx.fill();
+
+    // Head
+    ctx.fillStyle = "#f1c27d";
+    ctx.beginPath();
+    ctx.arc(0,-40,15,0,Math.PI*2);
+    ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(-5,-42,2,0,Math.PI*2);
+    ctx.arc(5,-42,2,0,Math.PI*2);
+    ctx.fill();
+
+    // Mouth
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0,-35,4,0,Math.PI);
+    ctx.stroke();
+
+    // Facial tattoo
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(5,-48);
+    ctx.quadraticCurveTo(10,-45,5,-40);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// ----- Draw UI -----
+function drawUI() {
+  ctx.fillStyle = "red";
+  ctx.fillRect(20, 20, player.hp*2, 10);
+  ctx.fillRect(canvas.width-220, 20, enemy.hp*2, 10);
+  
+  ctx.fillStyle = "yellow";
+  ctx.fillRect(20, 40, player.meter*2, 6);
+}
+
+// ----- Punch -----
+function punch(target, dmg) {
+  target.hp -= dmg;
+  target.hit = true;
+  setTimeout(() => target.hit = false, 120);
+}
+
+// ----- Controls -----
+canvas.addEventListener("touchstart", e => {
+  let x = e.touches[0].clientX;
+  if (x < window.innerWidth/2) {
+    punch(enemy, 5);
+    player.meter = Math.min(player.meter+5,50);
+  } else {
+    punch(enemy, 12);
+    player.meter = Math.min(player.meter+8,50);
+  }
+});
+
+document.getElementById("special").onclick = () => {
+  if(player.meter >= 50){
+    punch(enemy, 30);
+    player.meter = 0;
+  }
+};
+
+// ----- Enemy AI -----
+function enemyAI() {
+  if(Math.random() < 0.02) punch(player, 8);
+}
+
+// ----- Game Loop -----
+function gameLoop() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  
+  drawFighter(player, "prince");
+  drawFighter(enemy, "tyson");
+  drawUI();
+  
+  enemyAI();
+  
+  if(player.hp <=0 || enemy.hp <=0){
+    ctx.fillStyle = "white";
+    ctx.font = "32px Arial";
+    ctx.fillText(player.hp>0 ? "YOU WIN!" : "YOU LOSE!", canvas.width/2-90, canvas.height/2);
+    return;
+  }
+  
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+</body>
+</html>
