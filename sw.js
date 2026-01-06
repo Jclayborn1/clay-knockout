@@ -1,26 +1,19 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2822
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;\red255\green255\blue255;}
-{\*\expandedcolortbl;;\cssrgb\c100000\c100000\c100000;}
-\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-\deftab720
-\pard\pardeftab720\partightenfactor0
+const CACHE_NAME = "clay-knockout-v1";
+const urlsToCache = [
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./icon.png"
+];
 
-\f0\fs24 \cf0 \expnd0\expndtw0\kerning0
-self.addEventListener("install", e => \{\
- e.waitUntil(\
-   caches.open("clay-ko").then(cache =>\
-     cache.addAll([\
-       "./",\
-       "./index.html",\
-       "./manifest.json"\
-     ])\
-   )\
- );\
-\});\
-\
-self.addEventListener("fetch", e => \{\
- e.respondWith(\
-   caches.match(e.request).then(res => res || fetch(e.request))\
- );\
-\});}
+self.addEventListener("install", event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener("fetch", event => {
+  event.respondWith(
+    caches.match(event.request).then(response => response || fetch(event.request))
+  );
+});
